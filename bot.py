@@ -56,8 +56,8 @@ def make_github_issue(owner, repo, title, body=""):
     return r
 
 
-def send_issue(repo_owner, repo_name, message):
-    return make_github_issue(repo_owner, repo_name, message, '')
+def send_issue(repo_owner, repo_name, message, body):
+    return make_github_issue(repo_owner, repo_name, message, body)
 
 
 @bot.event
@@ -89,7 +89,7 @@ class Issues(commands.Cog):
             with open("config.json", "w") as file:
                 file.write(json.dumps(self.pairs))
 
-            await ctx.send(f'Repository https://github.com/{data["repo_owner"]}/{data["repo_name"]} erfolgreich hinzugefügt.')
+            await ctx.send(f'Repository <https://github.com/{data["repo_owner"]}/{data["repo_name"]}> erfolgreich hinzugefügt.')
                 
         else:
             await ctx.send(f'Repository https://github.com/{data["repo_owner"]}/{data["repo_name"]} existiert nicht.')
@@ -109,7 +109,7 @@ class Issues(commands.Cog):
 
         if data in self.pairs:
             self.pairs.remove(data)
-            await ctx.send(f'Repository https://github.com/{data["repo_owner"]}/{data["repo_name"]} wurde entfernt.')
+            await ctx.send(f'Repository <https://github.com/{data["repo_owner"]}/{data["repo_name"]}> wurde entfernt.')
         else:
             await ctx.send(f'Repository https://github.com/{data["repo_owner"]}/{data["repo_name"]} existiert nicht.')
 
@@ -135,7 +135,7 @@ class Issues(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
         if(message.author.id == bot.user.id): return
-
+        
         if(message.content.startswith(bot.command_prefix)):
             return
         
@@ -153,8 +153,11 @@ class Issues(commands.Cog):
         check = False
         checkmark = "\N{White Heavy Check Mark}"
         cross = "\N{CROSS MARK}"
+        issue_title = message.content
+        if issue_title == "":
+            issue_title = "Siehe Bilder"
         try:
-            new_message = await message.channel.send(f"Issue ``{message.content}`` absenden?")
+            new_message = await message.channel.send(f"Issue ``{issue_title}`` absenden?")
             await new_message.add_reaction(checkmark)
             await new_message.add_reaction(cross)
             
@@ -172,13 +175,16 @@ class Issues(commands.Cog):
         
         if not check: return
         
+        body = ""
+        for img in message.attachments:
+            body += f"![Bild]({img.url})\n"
         
         for i in self.pairs:
             channel_id = i["id"]
             repo_owner = i["repo_owner"]
             repo_name = i["repo_name"]
             if(channel_id == message.channel.id):
-                r = send_issue(repo_owner, repo_name, message.content)
+                r = send_issue(repo_owner, repo_name, issue_title, body)
                 status = r.status_code
                 if status == 201:
                     await message.channel.send(f"Issue https://github.com/{repo_owner}/{repo_name}/issues/{r.json()['number']} wurde erfolgreich erstellt!")
