@@ -83,14 +83,14 @@ class Issues(commands.Cog):
             "repo_name": args[1]
         }
         if repo_exists(data["repo_owner"], data["repo_name"]):
-            if not data in self.pairs:
+            if data not in self.pairs:
                 self.pairs.append(data)
 
             with open("config.json", "w") as file:
                 file.write(json.dumps(self.pairs))
 
             await ctx.send(f'Repository <https://github.com/{data["repo_owner"]}/{data["repo_name"]}> erfolgreich hinzugefügt.')
-                
+
         else:
             await ctx.send(f'Repository https://github.com/{data["repo_owner"]}/{data["repo_name"]} existiert nicht.')
 
@@ -135,10 +135,10 @@ class Issues(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
         if(message.author.id == bot.user.id): return
-        
+
         if(message.content.startswith(bot.command_prefix)):
             return
-        
+
         is_issue_channel = False
         for i in self.pairs:
             channel_id = i["id"]
@@ -147,9 +147,9 @@ class Issues(commands.Cog):
             if(channel_id == message.channel.id):  
                 is_issue_channel = True
                 break
-        
+
         if not is_issue_channel: return
-        
+
         check = False
         checkmark = "\N{White Heavy Check Mark}"
         cross = "\N{CROSS MARK}"
@@ -160,24 +160,20 @@ class Issues(commands.Cog):
             new_message = await message.channel.send(f"Issue ``{issue_title}`` absenden?")
             await new_message.add_reaction(checkmark)
             await new_message.add_reaction(cross)
-            
-            reaction, user = await self.bot.wait_for(
-                'reaction_add', timeout=60.0, 
-                check=lambda _reaction, _user: 
-                    _user == message.author and (_reaction.emoji == cross or _reaction.emoji == checkmark) and _reaction.message == new_message
-            )
+
+            reaction, user = await self.bot.wait_for('reaction_add', timeout=60.0, check=lambda _reaction, _user: _user == message.author and _reaction.emoji in [cross, checkmark] and _reaction.message == new_message)
+
             if reaction.emoji == cross:
                 await message.channel.send("Der Vorgang wurde abgebrochen.")
             elif reaction.emoji == checkmark:
                 check = True
         except asyncio.TimeoutError:
-            pass    
-        
+            # no answer by user
+            return
+
         if not check: return
-        
-        body = ""
-        for img in message.attachments:
-            body += f"![Bild]({img.url})\n"
+
+        body = "".join(f"![Bild]({img.url})\n" for img in message.attachments)
         
         for i in self.pairs:
             channel_id = i["id"]
