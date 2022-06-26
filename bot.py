@@ -15,11 +15,16 @@ bot = commands.Bot(command_prefix="+")
 
 
 def load_json():
-    with open("config.json", "r") as file:
-        data = json.loads(file.read())
-        if(data == ""):
-            return []
-        return data
+    try:
+        with open("config.json", "r") as file:
+            data = json.loads(file.read())
+            if(data == ""):
+                return []
+            return data
+    except FileNotFoundError as e:
+        with open("config.json", "w") as file:
+            file.write("[]")
+        return []
 
 
 def repo_exists(owner, name):
