@@ -88,6 +88,9 @@ class Issues(commands.Cog):
 
             with open("config.json", "w") as file:
                 file.write(json.dumps(self.pairs))
+
+            await ctx.send(f'Repository https://github.com/{data["repo_owner"]}/{data["repo_name"]} erfolgreich hinzugefügt.')
+                
         else:
             await ctx.send(f'Repository https://github.com/{data["repo_owner"]}/{data["repo_name"]} existiert nicht.')
 
