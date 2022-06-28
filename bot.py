@@ -13,7 +13,6 @@ from sqlalchemy import desc, true
 
 load_dotenv()
 TOKEN = os.environ.get("TOKEN")
-GH_USERNAME = os.environ.get("USERBANE")
 GH_TOKEN = os.environ.get("GH_TOKEN", "")
 
 bot = commands.Bot(command_prefix="+")
