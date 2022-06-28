@@ -235,7 +235,9 @@ class Issues(commands.Cog):
             
             if not issue.title and message.attachments:
                 issue.title = "Siehe Bilder:"
-            
+                
+            issue.attachments.extend(message.attachments)
+                
             try:
                 desc = "Issue `%s` absenden?" % issue.title
                 desc += f"\n{memo} um einen Kommenar hinzuzufügen\n{cross} um den Vorgang abzubrechen\n{checkmark} um zu betstätigen und den Issue abzusenden"
@@ -257,10 +259,8 @@ class Issues(commands.Cog):
                     await message.channel.send(embed=basic_embed(title="User cancel", description="Vorgang wurde aufgrund von User abgebrochen"))
                 
                 elif reaction.emoji == checkmark:
-                    issue.attachments.extend(message.attachments.copy())
                     r = await send_issue(issue, message.channel)
-                    if r:
-                        Issues.current_issues.pop(message.author.id, None)
+                    Issues.current_issues.pop(message.author.id, None)
                         
                     
                 elif reaction.emoji == memo:
@@ -296,7 +296,6 @@ class Issues(commands.Cog):
                     await message.channel.send(embed=basic_embed(title="User cancel", description="Vorgang wurde aufgrund von User abgebrochen"))
                 
                 elif reaction.emoji == checkmark:
-                    issue.attachments.extend(message.attachments)
                     r = await send_issue(issue, message.channel)
                     if r:                
                        Issues.current_issues.pop(message.author.id, None)
